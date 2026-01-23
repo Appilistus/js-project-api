@@ -45,15 +45,15 @@ app.get("/messages/:id", (req, res) => {
 app.get("/messages", (req, res) => {
   const { hasHearts } = req.query
 
-    let filteredMessages = happyThoughts
+  let filteredMessages = happyThoughts
 
-    if(hasHearts === "true") {
-      filteredMessages = filteredMessages.filter((m) => m.hearts > 0)
-    }
+  if(hasHearts === "true") {
+    filteredMessages = filteredMessages.filter((m) => m.hearts > 0)
+  }
 
-    if(hasHearts ==="false") {
-      filteredMessages = filteredMessages.filter((m) => m.hearts === 0 )
-    }
+  if(hasHearts ==="false") {
+    filteredMessages = filteredMessages.filter((m) => m.hearts === 0 )
+  }
 
     res.json(filteredMessages)
 })
@@ -69,7 +69,9 @@ app.post("/messages", (req, res) => {
   }
 
   happyThoughts.push(newMessage)
-  res.json(newMessage)
+  res
+    .status(201)
+    .json(newMessage)
 })
 
 // Delete a message
