@@ -22,7 +22,6 @@ app.use(express.json())
 
 // Mongoose schema
 const messageSchema = new mongoose.Schema({
-  _id: String,
   message: {
     type: String,
     required: true,
@@ -40,10 +39,12 @@ const Message = mongoose.model("Message", messageSchema)
 if (process.env.RESET_DB === "true") {
   const seedDatabase = async () => {
     await Message.deleteMany()
+    await Message.insertMany(happyThoughts)
+    console.log("DB seeded!");
 
-    happyThoughts.forEach((message) => {
-      new Message(message).save()
-    })
+    // happyThoughts.forEach((message) => {
+    //   new Message(message).save()
+    // })
   }
   seedDatabase()
 }
@@ -57,7 +58,7 @@ app.get("/", (req, res) => {
   })
 })
 
-// Filter: has hearts or not
+// Get all messages and filter if they have hearts
 app.get("/messages", async (req, res) => {
   const { hasHearts } = req.query
 
@@ -65,44 +66,25 @@ app.get("/messages", async (req, res) => {
 
   if (hasHearts === "true") {
     query.hearts = { $gt: 0 }
+  } else if (hasHearts === "false") {
+    query.hearts = 0
   }
 
   try {
-    const filteredMessages = await Message.find(query)
-
-    if (filteredMessages.length === 0) {
-      return res.status(404).json({
-        success: false,
-        response: [],
-        message: "No messages found",
-      })
-    }
-
+    const messages = await Message.find(query)
     return res.status(200).json({
       success: true,
-      response: filteredMessages,
-      message: "Success",
+      response: messages,
+      message: "Success"
     })
   } catch (error) {
     return res.status(500).json({
       success: false,
       response: [],
-      message: error,
+      message: error.message,
     })
   }
-  // let filteredMessages = happyThoughts
-
-  // if(hasHearts === "true") {
-  //   filteredMessages = filteredMessages.filter((m) => m.hearts > 0)
-  // }
-
-  // if(hasHearts ==="false") {
-  //   filteredMessages = filteredMessages.filter((m) => m.hearts === 0 )
-  // }
-
-  //   res.json(filteredMessages)
 })
-
 
 // Get message id and return a single message
 app.get("/messages/:id", async (req, res) => {
@@ -139,17 +121,7 @@ app.get("/messages/:id", async (req, res) => {
       message: error,
     })
   }
-  // const message = happyThoughts.find((m) => m._id === id)
-
-  // if(!message) {
-  //   return res
-  //     .status(404)
-  //     .json({ error: `Message with id ${id} not found`})
-  // }
-
-  // res.json(message)
 })
-
 
 // Post new messages and save
 app.post("/messages", async (req, res) => {
@@ -173,38 +145,74 @@ app.post("/messages", async (req, res) => {
     return res.status(500).json({
       success: false,
       response: null,
-      message: error,
+      message: error.message,
     })
   }
-  // const newMessage = {
-  //   "_id": crypto.randomUUID(),
-  //   "message": body.message,
-  //   "hearts": 0,
-  //   "createdAt": new Date().toISOString(),
-  // }
+})
 
-  // happyThoughts.push(newMessage)
-  // res
-  //   .status(201)
-  //   .json(newMessage)
+app.patch("/messages/:id/like", async (req, res) => {
+  const id = req.params.id
+  
+  try {
+    if(!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({
+        success: false,
+        response: null,
+        message: "Invalid ID format",
+      })
+    }
+
+    const updatedMessage = await Message.findByIdAndUpdate(
+      id,
+      { $inc: { hearts: 1 } },
+      { new: true }
+    )
+
+    if (!updatedMessage) {
+      return res.status(404).json({
+        success: false,
+        response: null,
+        message: "Message not found",
+      })
+    }
+
+    return res.status(200).json({
+      success: true,
+      response: updatedMessage,
+      message: "Success"
+    })
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      response: null,
+      message: error.message,
+    })
+  }
 })
 
 // Delete a message
-app.delete("/messages/:id", (req, res) => {
+app.delete("/messages/:id", async (req, res) => {
   const id = req.params.id
-  const message = happyThoughts.find((m) => m._id === id)
-
-  if(!message) {
-    return res
-      .status(404)
-      .json({ error: `Message with id ${id} not found`})
+  try {
+    const deleted = await Message.findByIdAndDelete(id)
+    if(!deleted) {
+      return res.status(404).json({
+        success: false,
+        response: null,
+        message: "Message not found",
+      })
+    }return res.status(200).json({
+      success: true,
+      response: deleted,
+      message: "Success",
+    })
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      response: null,
+      message: error.message,
+    })
   }
-
-  const newMessages = happyThoughts.filter((m) => m._id !== id)
-  
-  happyThoughts = newMessages
-
-  res.json(message)
 })
 
 // Start the server
