@@ -71,7 +71,7 @@ app.get("/messages", async (req, res) => {
   }
 
   try {
-    const messages = await Message.find(query)
+    const messages = await Message.find(query).sort({ createdAt: -1 }) // new message at the top
     return res.status(200).json({
       success: true,
       response: messages,
