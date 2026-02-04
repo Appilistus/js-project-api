@@ -25,7 +25,7 @@ export const authenticateUser = async (req, res, next) => {
 }
 
 // Middleware to optionally authenticate user
-export const optionalAuthenticate = async (req, res,next) => {
+export const optionalAuthenticate = async (req, res, next) => {
   const authHeader = req.headers.authorization
 
   if (authHeader?.startsWith("Bearer ")) {
