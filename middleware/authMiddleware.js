@@ -1,11 +1,22 @@
 import { User } from "../models/user.js";
 
 export const authenticateUser = async (req, res, next) => {
+  const authHeader = req.header("Authorization")
+
   try {
+    if(!authHeader) {
+      return res.status(401).json({
+        success: false,
+        message: "Authentication missing or invalid",
+        logOut: true,
+      })
+    }
+
     const user = await User.findOne({
-      accessToken: req.header("Authorization").replace("Bearer ", ""),
+      accessToken: authHeader.replace("Bearer ", "")
     })
-    if (user) {
+
+    if(user) {
       req.user = user
       next()
     } else {

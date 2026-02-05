@@ -3,6 +3,7 @@ import cors from "cors"
 import "dotenv/config"
 import mongoose from "mongoose"
 import listEndpoints from "express-list-endpoints"
+import { Message } from "./models/message.js"
 
 import userRoutes from "./routes/userRoutes.js"
 import messageRoutes from "./routes/messageRoutes.js"
