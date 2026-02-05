@@ -15,7 +15,7 @@ const messageSchema = new mongoose.Schema({
     ref: "User",
     required: false, // Allow messages without logged-in users
   },
-  likedBy: [{
+  likedByUsers: [{
     type: mongoose.Schema.Types.ObjectId,
     ref: "User",
   }],

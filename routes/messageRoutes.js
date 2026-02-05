@@ -73,7 +73,7 @@ router.get("/:id", async (req, res) => {
     return res.status(500).json({
       success: false,
       response: null,
-      message: error,
+      message: error.message,
     })
   }
 })
@@ -122,7 +122,6 @@ router.patch("/:id/like", async (req, res) => {
       })
     }
 
-    message.likedByUsers = message.likedByUsers || []
     message.likedByClients = message.likedByClients || []
 
     if (authHeader?.startsWith("Bearer ")) {
@@ -137,15 +136,7 @@ router.patch("/:id/like", async (req, res) => {
         })
       }
 
-      if (message.likedByUsers.includes(user._id)) {
-        return res.status(400).json({
-          success: false,
-          message: "You already liked this message",
-        })
-      }
-
       message.hearts += 1
-      message.likedByUsers.push(user._id)
       await message.save()
 
       return res.status(200).json({
@@ -201,6 +192,14 @@ router.delete("/:id", authenticateUser, async (req, res) => {
       })
     }
     
+    // Anonymous messages cannot be deleted
+    if (!message.userId) {
+      return res.status(403).json({
+        success: false,
+        message: "Not allowed to delete this message",
+      })
+    }
+
     // Check if the user is the owner of the message
     if (message.userId.toString() !== req.user._id.toString()) {
       return res.status(403).json({
