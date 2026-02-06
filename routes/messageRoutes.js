@@ -1,7 +1,6 @@
 import express from "express";
 import { Message } from "../models/message.js";
-import { authenticateUser } from "../middleware/authMiddleware.js";
-import { optionalAuthenticate } from "../middleware/authMiddleware.js";
+import { authenticateUser, optionalAuthenticate } from "../middleware/authMiddleware.js";
 import mongoose from "mongoose";
 import { User } from "../models/user.js";
 
@@ -69,7 +68,7 @@ router.get("/:id", async (req, res) => {
       response: message,
       message: "Success"
     })
-  } catch {
+  } catch (error) {
     return res.status(500).json({
       success: false,
       response: null,
@@ -86,15 +85,12 @@ router.post("/", optionalAuthenticate, async (req, res) => {
     const newMessage = await new Message({
       message: body.message,
       hearts: 0,
-      createdAt: new Date().toISOString(),
       userId: req.userId || null, // Set userId if authenticated, else null
     }).save()
 
-    const createdMessage = await new Message(newMessage).save()
-
     return res.status(201).json({
       success: true,
-      response: createdMessage,
+      response: newMessage,
       message: "Success"
     })
   } catch (error) {
